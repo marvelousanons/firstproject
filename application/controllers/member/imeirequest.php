@@ -1,0 +1,657 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class imeirequest extends FSD_Controller 
+{
+	var $before_filter = array('name' => 'member_authorization', 'except' => array());
+	
+	public function __construct()
+	{
+		parent::__construct();
+		$this->load->model('member_model');
+		$this->load->model('method_model');
+		$this->load->model('brand_model');
+		$this->load->model('provider_model');
+		$this->load->model('network_model');
+		$this->load->model('imeiorder_model');
+		$this->load->model('credit_model');
+		$this->load->model("servicemodel_model");		
+		$this->load->model("mep_model");
+		$this->load->model("autoresponder_model");
+		$this->load->helper('formatcurrency_helper');
+		$this->load->helper('string');
+		$this->load->helper('log_activity_helper');
+	}
+	
+	########### IMEI Order Request Form display #######################################
+	
+	public function index()
+	{
+		$data = array();
+		$data['Title'] = "Imei Request";
+			   $id = $this->session->userdata('MemberID');
+			   $data['imeimethods'] = $this->method_model->method_with_networks_list(null, null, $id);
+		$data['template'] = "member/imei/request";
+		$id = $this->session->userdata('MemberID');
+		$data['credit'] = $this->credit_model->get_credit($id);
+
+		$settings = $this->setting_model->get_all();
+		foreach ($settings as $s)
+			$data['notif'][$s['Key']] = $s['Value'];
+
+		foreach ($settings as $s)
+			$data['notif_updated'][$s['Key']] = $s['UpdatedDateTime'];
+
+		$data['content'] = "member/imei/request";
+		$data['content_js'] = "imei_request/imeiRequest.js";
+
+		$this->load->view('mastertemplate', $data);
+	}
+
+	public function listservices()
+	{
+		$data = array();
+		$data['Title'] = "Imei Request List";
+		$data['template'] = "member/imei/requestlist";
+
+		$data['content'] = "member/imei/requestlist";
+		$data['content_js'] = "imei_request/imeiRequestList.js";
+
+		$settings = $this->setting_model->get_all();
+		foreach ($settings as $s)
+			$data['notif'][$s['Key']] = $s['Value'];
+
+		foreach ($settings as $s)
+			$data['notif_updated'][$s['Key']] = $s['UpdatedDateTime'];
+
+		$this->load->view('mastertemplate', $data);
+	}
+
+	public function listservicesdata()
+	{
+
+		$start      =  $_REQUEST['start'];
+		$length     = $_REQUEST['length'];
+		$cari_data  = $_REQUEST['search']['value'];
+
+		// Get sorting parameters
+		$order_dir = $this->input->post('order')[0]['dir'];
+
+		$member_id = $this->session->userdata('MemberID');
+		$datas = $this->method_model->method_with_networks_list($cari_data, $order_dir, $member_id);
+
+		$total = 9999999;
+		$array_data = array();
+		$no = $start + 1;
+
+		$flattenedData = [];
+		foreach ($datas as $network) {
+			if (!empty($network['methods'])) {
+				// Baris network (header group), tidak tampilkan tombol View
+				$flattenedData[] = [
+					'title' => '<p style="padding:10px;margin:0px;background-color:lightgrey"><b>'.$network['Title'].'</b></p>',
+					'DeliveryTime' => '',
+					'methodPrice' => '',
+					'slug' => '',
+					'ID' => '',
+					'show_view' => false
+				];
+				foreach ($network['methods'] as $method) {
+					$slug = url_title($method['Title']);
+					$flattenedData[] = [
+						'title' => '<p style="padding:10px;margin:0px;cursor:pointer" onclick="detail_service(\''.$slug.'\',\''.$method['ID'].'\')">'.$method['Title'].'</p>',
+						'DeliveryTime' => '<p style="padding:10px;margin:0px">'.$method['DeliveryTime'].'</p>',
+						'methodPrice' => '<p style="padding:10px;margin:0px">'.format_currency($method['Price']).'</p>',
+						'slug' => $slug,
+						'ID' => $method['ID'],
+						'show_view' => true
+					];
+				}
+			}
+		}
+
+
+		foreach ($flattenedData as $method) {
+			$data['title'] = isset($method['title']) ? $method['title'] : '';
+			$data['delivery_time'] = isset($method['DeliveryTime']) ? $method['DeliveryTime'] : '';
+			$data['price'] = isset($method['methodPrice']) ? $method['methodPrice'] : '';
+			$data['slug'] = isset($method['slug']) ? $method['slug'] : '';
+			$data['id'] = isset($method['ID']) ? $method['ID'] : '';
+			$data['show_view'] = isset($method['show_view']) ? $method['show_view'] : false;
+			array_push($array_data, $data);
+		}
+
+		$no++;
+
+		$output = array(
+
+			"draw" => intval($_REQUEST['draw']),
+			"recordsTotal" => intval($total),
+			"recordsFiltered" => intval($total),
+			"data" => $array_data
+		);
+
+
+		echo json_encode($output);
+	}
+	
+	######################## Verify Imei Request FOrm display #########################
+	
+	public function verify()
+	{
+		$data = array();
+		$data['Title'] = "Verify Imei Request";
+		$data['imeimethods'] = $this->method_model->get_where(array('Status'=> 'Enabled'));
+		$data['template'] = "member/imei/verifyrequest";
+		$id = $this->session->userdata('MemberID');
+		$data['credit'] = $this->credit_model->get_credit($id);
+
+		$settings = $this->setting_model->get_all();
+		foreach ($settings as $s)
+			$data['notif'][$s['Key']] = $s['Value'];
+
+		foreach ($settings as $s)
+			$data['notif_updated'][$s['Key']] = $s['UpdatedDateTime'];
+
+		$this->load->view('mastertemplate', $data);
+	}
+	
+	######################## Insert Verify Imei Request  #########################
+	
+	public function verifyinsert()
+	{
+		$this->load->library('form_validation');
+		$this->form_validation->set_rules('orderid' , 'order id' ,'required');
+		$this->form_validation->set_rules('code' , 'code' ,'required');
+		$this->form_validation->set_rules('imei' , 'imei' ,'required');
+		if($this->form_validation->run() === FALSE)	
+		{
+			$this->session->set_flashdata("fail", $this->lang->line('error_please_fill_all_required'));
+			$this->index();	
+		}
+		else 
+		{
+			$data = $this->input->post(NULL,TRUE);
+			
+			$order_data = $this->imeiorder_model->get_order_details(array('gsm_imei_orders.ID' => $data['orderid'], 'gsm_imei_orders.IMEI' => $data['imei'], 'gsm_imei_orders.Code' => $data['code'] ));
+			
+			if(!empty($order_data))
+			{
+				if($order_data[0]['verify'] == 0 )
+				{
+					$update['verify'] = 1;
+					$update['Status'] = 'Verified';
+					$update['UpdatedDateTime'] = date("Y-m-d H:i:s");
+					
+					$this->imeiorder_model->update($update,$data['orderid']);
+					
+					$this->session->set_flashdata("success", $this->lang->line('error_request_submit'));
+					redirect(site_url('member/imeirequest/verify'));
+				}
+				else 
+				{
+					$this->session->set_flashdata("fail", $this->lang->line('error_already_verify_request'));
+					redirect(site_url('member/imeirequest/verify'));
+				}
+			}
+			else 
+			{
+				$this->session->set_flashdata("fail", $this->lang->line('error_record_not_found'));
+				redirect(site_url('member/imeirequest/verify'));
+			}
+			
+		}
+	}
+		
+	################# Ajax form request fields shown according to database criteria ####
+	
+	public function formfields()
+	{
+		if($this->input->is_ajax_request() === TRUE && $this->input->post('MethodID') !== FALSE)
+		{
+			$member_id = $this->session->userdata('MemberID');
+			$id = $this->input->post('MethodID');    
+			$method = $this->method_model->get_where(array('ID' => $id));           
+			$pricing = $this->method_model->get_user_price($member_id, $id);
+
+			// Tambahkan pengecekan agar tidak error jika $method atau $pricing adalah bool (false)
+			if (!is_array($method) || !isset($method[0]) || $method === false) {
+				$method = [0 => []];
+			}
+			if (!is_array($pricing) || !isset($pricing[0]) || $pricing === false) {
+				$pricing = [0 => []];
+			}
+
+			$data['field_type'] = isset($method[0]['FieldType']) ? $method[0]['FieldType'] : '';
+			$data['price_fix'] = isset($method[0]['Price']) ? $method[0]['Price'] : '';
+			$data['price'] = isset($pricing[0]['Price']) ? floatval($pricing[0]['Price']) : 0;
+			$data['delivery_time'] = isset($method[0]['DeliveryTime']) ? $method[0]['DeliveryTime'] : '';
+			$data['description'] = isset($method[0]['Description']) ? $method[0]['Description'] : '';
+			$data['download'] = isset($method[0]['Download']) ? $method[0]['Download'] : '';
+
+			## DropDowns ##
+			$data['providers'] = (isset($method[0]['Provider']) && $method[0]['Provider'] == 1) ? $this->provider_model->get_where(array('MethodID' => $id)) : NULL;
+			$data['models'] = (isset($method[0]['Mobile']) && $method[0]['Mobile'] == 1) ? $this->servicemodel_model->get_where(array('MethodID' => $id)) : NULL;
+			$data['meps'] = (isset($method[0]['MEP']) && $method[0]['MEP'] == 1) ? $this->mep_model->get_where(array('MethodID' => $id)) : NULL;
+			## Text Boxes ##
+			$data['pin'] = (isset($method[0]['PIN']) && $method[0]['PIN'] == 1) ? TRUE : FALSE;
+			$data['kbh'] = (isset($method[0]['KBH']) && $method[0]['KBH'] == 1) ? TRUE : FALSE;
+			$data['prd'] = (isset($method[0]['PRD']) && $method[0]['PRD'] == 1) ? TRUE : FALSE;
+			$data['type'] = (isset($method[0]['Type']) && $method[0]['Type'] == 1) ? TRUE : FALSE;
+			$data['locks'] = (isset($method[0]['Locks']) && $method[0]['Locks'] == 1) ? TRUE : FALSE;
+			$data['serial_number'] = (isset($method[0]['SerialNumber']) && $method[0]['SerialNumber'] == 1) ? TRUE : FALSE;
+			$data['reference'] = (isset($method[0]['Reference']) && $method[0]['Reference'] == 1) ? TRUE : FALSE;
+			$data['extra_information'] = (isset($method[0]['ExtraInformation']) && $method[0]['ExtraInformation'] == 1) ? TRUE : FALSE;
+
+			$data['iCloudCarrierInfo'] = (isset($method[0]['iCloudCarrierInfo']) && $method[0]['iCloudCarrierInfo'] == 1) ? TRUE : FALSE;
+			$data['iCloudAppleIDHint'] = (isset($method[0]['iCloudAppleIDHint']) && $method[0]['iCloudAppleIDHint'] == 1) ? TRUE : FALSE;
+			$data['iCloudActivationLockScreenshot'] = (isset($method[0]['iCloudActivationLockScreenshot']) && $method[0]['iCloudActivationLockScreenshot'] == 1) ? TRUE : FALSE;
+			$data['iCloudIMEINumberScreenshot'] = (isset($method[0]['iCloudIMEINumberScreenshot']) && $method[0]['iCloudIMEINumberScreenshot'] == 1) ? TRUE : FALSE;
+			$data['iCloudAppleIdEmail'] = (isset($method[0]['iCloudAppleIdEmail']) && $method[0]['iCloudAppleIdEmail'] == 1) ? TRUE : FALSE;
+			$data['iCloudAppleIdScreenshot'] = (isset($method[0]['iCloudAppleIdScreenshot']) && $method[0]['iCloudAppleIdScreenshot'] == 1) ? TRUE : FALSE;
+			$data['iCloudAppleIdInfo'] = (isset($method[0]['iCloudAppleIdInfo']) && $method[0]['iCloudAppleIdInfo'] == 1) ? TRUE : FALSE;
+			$data['iCloudPhoneNumber'] = (isset($method[0]['iCloudPhoneNumber']) && $method[0]['iCloudPhoneNumber'] == 1) ? TRUE : FALSE;
+			$data['iCloudID'] = (isset($method[0]['iCloudID']) && $method[0]['iCloudID'] == 1) ? TRUE : FALSE;
+			$data['iCloudPassword'] = (isset($method[0]['iCloudPassword']) && $method[0]['iCloudPassword'] == 1) ? TRUE : FALSE;
+			$data['iCloudUDID'] = (isset($method[0]['iCloudUDID']) && $method[0]['iCloudUDID'] == 1) ? TRUE : FALSE;
+			$data['iCloudICCID'] = (isset($method[0]['iCloudICCID']) && $method[0]['iCloudICCID'] == 1) ? TRUE : FALSE;
+			$data['iCloudVideo'] = (isset($method[0]['iCloudVideo']) && $method[0]['iCloudVideo'] == 1) ? TRUE : FALSE;
+
+			$this->load->view("member/imei/loadrequiredfield", $data);
+		}
+	}
+
+	public function formfieldstext()
+	{
+		if($this->input->is_ajax_request() === TRUE && $this->input->post('MethodID') !== FALSE)
+		{
+			$member_id = $this->session->userdata('MemberID');
+			$id = $this->input->post('MethodID');    
+			$method = $this->method_model->get_where(array('ID' => $id));           
+			$pricing = $this->method_model->get_user_price($member_id, $id);
+
+			// Tambahkan pengecekan agar tidak error jika $method atau $pricing adalah bool (false)
+			if (!is_array($method) || !isset($method[0]) || $method === false) {
+				$method = [0 => []];
+			}
+			if (!is_array($pricing) || !isset($pricing[0]) || $pricing === false) {
+				$pricing = [0 => []];
+			}
+
+			$data['field_type'] = isset($method[0]['FieldType']) ? $method[0]['FieldType'] : '';
+			$data['price_fix'] = isset($method[0]['Price']) ? $method[0]['Price'] : '';
+			$data['price'] = isset($pricing[0]['Price']) ? floatval($pricing[0]['Price']) : 0;
+			$data['download'] = isset($method[0]['Download']) ? $method[0]['Download'] : '';
+			$data['delivery_time'] = isset($method[0]['DeliveryTime']) ? $method[0]['DeliveryTime'] : '';
+			$data['description'] = isset($method[0]['Description']) ? $method[0]['Description'] : '';
+			$data['video'] = isset($method[0]['Video']) ? $method[0]['Video'] : '';
+			$data['title'] = isset($method[0]['Title']) ? $method[0]['Title'] : '';
+
+			// Gunakan format_currency() agar sesuai session (USD/IDR)
+			$this->load->helper('formatcurrency_helper');
+			$data['price_label'] = $method[0]['Title'].' - Only '.format_currency($method[0]['Price']).' credit required';
+			$data['price_only'] = format_currency($method[0]['Price']);
+
+			## DropDowns ##
+			$data['providers'] = (isset($method[0]['Provider']) && $method[0]['Provider'] == 1) ? $this->provider_model->get_where(array('MethodID' => $id)) : NULL;
+			$data['models'] = (isset($method[0]['Mobile']) && $method[0]['Mobile'] == 1) ? $this->servicemodel_model->get_where(array('MethodID' => $id)) : NULL;
+			$data['meps'] = (isset($method[0]['MEP']) && $method[0]['MEP'] == 1) ? $this->mep_model->get_where(array('MethodID' => $id)) : NULL;
+			## Text Boxes ##
+			$data['pin'] = (isset($method[0]['PIN']) && $method[0]['PIN'] == 1) ? TRUE : FALSE;
+			$data['kbh'] = (isset($method[0]['KBH']) && $method[0]['KBH'] == 1) ? TRUE : FALSE;
+			$data['prd'] = (isset($method[0]['PRD']) && $method[0]['PRD'] == 1) ? TRUE : FALSE;
+			$data['type'] = (isset($method[0]['Type']) && $method[0]['Type'] == 1) ? TRUE : FALSE;
+			$data['locks'] = (isset($method[0]['Locks']) && $method[0]['Locks'] == 1) ? TRUE : FALSE;
+			$data['serial_number'] = (isset($method[0]['SerialNumber']) && $method[0]['SerialNumber'] == 1) ? TRUE : FALSE;
+			$data['reference'] = (isset($method[0]['Reference']) && $method[0]['Reference'] == 1) ? TRUE : FALSE;
+			$data['extra_information'] = (isset($method[0]['ExtraInformation']) && $method[0]['ExtraInformation'] == 1) ? TRUE : FALSE;
+
+			$data['iCloudCarrierInfo'] = (isset($method[0]['iCloudCarrierInfo']) && $method[0]['iCloudCarrierInfo'] == 1) ? TRUE : FALSE;
+			$data['iCloudAppleIDHint'] = (isset($method[0]['iCloudAppleIDHint']) && $method[0]['iCloudAppleIDHint'] == 1) ? TRUE : FALSE;
+			$data['iCloudActivationLockScreenshot'] = (isset($method[0]['iCloudActivationLockScreenshot']) && $method[0]['iCloudActivationLockScreenshot'] == 1) ? TRUE : FALSE;
+			$data['iCloudIMEINumberScreenshot'] = (isset($method[0]['iCloudIMEINumberScreenshot']) && $method[0]['iCloudIMEINumberScreenshot'] == 1) ? TRUE : FALSE;
+			$data['iCloudAppleIdEmail'] = (isset($method[0]['iCloudAppleIdEmail']) && $method[0]['iCloudAppleIdEmail'] == 1) ? TRUE : FALSE;
+			$data['iCloudAppleIdScreenshot'] = (isset($method[0]['iCloudAppleIdScreenshot']) && $method[0]['iCloudAppleIdScreenshot'] == 1) ? TRUE : FALSE;
+			$data['iCloudAppleIdInfo'] = (isset($method[0]['iCloudAppleIdInfo']) && $method[0]['iCloudAppleIdInfo'] == 1) ? TRUE : FALSE;
+			$data['iCloudPhoneNumber'] = (isset($method[0]['iCloudPhoneNumber']) && $method[0]['iCloudPhoneNumber'] == 1) ? TRUE : FALSE;
+			$data['iCloudID'] = (isset($method[0]['iCloudID']) && $method[0]['iCloudID'] == 1) ? TRUE : FALSE;
+			$data['iCloudPassword'] = (isset($method[0]['iCloudPassword']) && $method[0]['iCloudPassword'] == 1) ? TRUE : FALSE;
+			$data['iCloudUDID'] = (isset($method[0]['iCloudUDID']) && $method[0]['iCloudUDID'] == 1) ? TRUE : FALSE;
+			$data['iCloudICCID'] = (isset($method[0]['iCloudICCID']) && $method[0]['iCloudICCID'] == 1) ? TRUE : FALSE;
+			$data['iCloudVideo'] = (isset($method[0]['iCloudVideo']) && $method[0]['iCloudVideo'] == 1) ? TRUE : FALSE;
+
+			echo json_encode($data);
+		}
+	}
+	
+	###### Place IMER Request Order and deduct charges ################################
+	
+	public function insert()
+	{
+		$this->load->library('form_validation');
+		$data = $this->input->post(NULL, TRUE);
+		$method_id = $data['MethodID'];
+		switch ($data['field_type']) 
+		{
+			case ORDER_FIELD_TYPE_SN:
+				$this->form_validation->set_rules('IMEI' , 'Serial No' ,'trim|required|callback_sn_check|callback_duplicate_check['.$method_id.']');	
+				break;
+			case ORDER_FIELD_TYPE_IMEI:
+				$this->form_validation->set_rules('IMEI' , 'IMEI' ,'trim|required|callback_imei_check|callback_duplicate_check['.$method_id.']');
+				break;
+			default:
+				$this->form_validation->set_rules('IMEI' , 'IMEI / Serial No' ,'trim|required|callback_duplicate_check['.$method_id.']');
+				break;
+		}
+		$this->form_validation->set_rules('MethodID' , 'Method' ,'required');
+		// $this->form_validation->set_rules('Email' , 'Email' ,'valid_email');
+		$this->form_validation->set_rules('Note' , 'Note' ,'max_length[255]');
+		if($this->form_validation->run() === FALSE)	
+		{
+			$this->index();	
+		}
+		else 
+		{
+			   $member_id = $this->session->userdata('MemberID');
+			   $credit = $this->credit_model->get_credit($member_id);
+			   // Ambil harga custom+diskon group sesuai member
+			   $all_methods = $this->method_model->method_with_networks_list(null, null, $member_id);
+			   $price = null;
+			   // Cari harga method yang sesuai
+			   foreach ($all_methods as $network) {
+					   if (!empty($network['methods'])) {
+							   foreach ($network['methods'] as $method) {
+									   if ($method['ID'] == $method_id) {
+											   $price = floatval($method['Price']);
+											   break 2;
+									   }
+							   }
+					   }
+			   }
+			   if ($price === null) {
+					   // fallback: ambil harga default
+					   $pricing = $this->method_model->get_user_price_new($method_id);
+					   $price = floatval($pricing[0]['Price']);
+			   }
+
+			   #### Get IMEI CODES,Count Requests For Orders check Credit
+			   $imei_data = explode(PHP_EOL, $data['IMEI']);           
+			   $total_price = count($imei_data) * $price;
+
+			   if($total_price > $credit )
+			   {
+					   $this->session->set_flashdata('message', $this->lang->line('error_not_enough_credit'));
+					   redirect("member/imeirequest/");
+			   }
+
+			   #### Place Order                 
+			   foreach($imei_data as $key => $val)
+			   {
+					   $insert = array();
+					   $insert['MethodID'] = $method_id;
+					   $insert['IMEI'] = $val;
+					   $insert['Email'] = isset($data['Email']) ? $data['Email'] : '';
+					   $insert['Price'] = $price; // simpan harga custom ke order
+
+					   $insert['MemberID'] = $member_id;
+					   $insert['Maker'] = array_key_exists("Maker", $data)? $data['Maker']: NULL;
+					   $insert['Model'] = array_key_exists("Model", $data)? $data['Model']: NULL;                 
+					   ## API Fields ##
+					   $insert['ExtraInformation'] = array_key_exists("ExtraInformation", $data)? $data['ExtraInformation']:NULL;
+					   $insert['SerialNumber'] = array_key_exists("SerialNumber", $data)? $data['SerialNumber']: NULL;
+					   $insert['ModelID'] = array_key_exists("ModelID", $data)? $data['ModelID']: NULL;           
+					   $insert['ProviderID'] = array_key_exists("ProviderID", $data)? $data['ProviderID']: NULL;
+					   $insert['MEPID'] = array_key_exists("MEPID", $data)? $data['MEPID']: NULL;
+					   $insert['PIN'] = array_key_exists("PIN", $data)? $data['PIN']: NULL;
+					   $insert['KBH'] = array_key_exists("KBH", $data)? $data['KBH']: NULL;
+					   $insert['PRD'] = array_key_exists("PRD", $data)? $data['PRD']: NULL;
+					   $insert['Type'] = array_key_exists("Type", $data)? $data['Type']: NULL;
+					   $insert['Locks'] = array_key_exists("Locks", $data)? $data['Locks']: NULL;
+					   $insert['Reference'] = array_key_exists("Reference", $data)? $data['Reference']: NULL;
+
+					   $insert['iCloudCarrierInfo'] = array_key_exists('iCloudCarrierInfo', $data)? $data['iCloudCarrierInfo']: NULL;
+					   $insert['iCloudAppleIDHint'] = array_key_exists('iCloudAppleIDHint', $data)? $data['iCloudAppleIDHint']: NULL;
+					   $insert['iCloudActivationLockScreenshot'] = array_key_exists('iCloudActivationLockScreenshot', $data)? $data['iCloudActivationLockScreenshot']: NULL;
+					   $insert['iCloudIMEINumberScreenshot'] = array_key_exists('iCloudIMEINumberScreenshot', $data)? $data['iCloudIMEINumberScreenshot']: NULL;
+					   $insert['iCloudAppleIdEmail'] = array_key_exists('iCloudAppleIdEmail', $data)? $data['iCloudAppleIdEmail']: NULL;
+					   $insert['iCloudAppleIdScreenshot'] = array_key_exists('iCloudAppleIdScreenshot', $data)? $data['iCloudAppleIdScreenshot']: NULL;
+					   $insert['iCloudAppleIdInfo'] = array_key_exists('iCloudAppleIdInfo', $data)? $data['iCloudAppleIdInfo']: NULL;
+					   $insert['iCloudPhoneNumber'] = array_key_exists('iCloudPhoneNumber', $data)? $data['iCloudPhoneNumber']: NULL;
+					   $insert['iCloudID'] = array_key_exists('iCloudID', $data)? $data['iCloudID']: NULL;
+					   $insert['iCloudPassword'] = array_key_exists('iCloudPassword', $data)? $data['iCloudPassword']: NULL;
+					   $insert['iCloudUDID'] = array_key_exists('iCloudUDID', $data)? $data['iCloudUDID']: NULL;
+					   $insert['iCloudICCID'] = array_key_exists('iCloudICCID', $data)? $data['iCloudICCID']: NULL;
+					   $insert['iCloudVideo'] = array_key_exists('iCloudVideo', $data)? $data['iCloudVideo']: NULL;
+					   
+					   $insert['Note'] = $data['Note'];
+					   $insert['Status'] = 'Pending';
+					   $insert['UpdatedDateTime'] = date("Y-m-d H:i:s");
+					   $insert['CreatedDateTime'] = date("Y-m-d H:i:s");
+
+					   $insert_id = $this->imeiorder_model->insert($insert);
+
+					   // Log activity for IMEI order placement
+					   $username = '';
+					   if ($this->session->userdata('MemberFirstName') || $this->session->userdata('MemberLastName')) {
+							   $username = $this->session->userdata('MemberFirstName') . ' ' . $this->session->userdata('MemberLastName');
+					   } else if ($this->session->userdata('username')) {
+							   $username = $this->session->userdata('username');
+					   }
+					   log_activity('Melakukan pemesanan IMEI: ' . $val . ' (Layanan: ' . $method_id . ')', $member_id, $username);
+					   
+					   #####Deduct Credits from available credits
+					   $credit_data = array(
+							   'MemberID' => $member_id,
+							   'TransactionCode' => IMEI_CODE_REQUEST,
+							   'TransactionID' => $insert_id,
+							   'Description' => "IMEI Code request against imei:".$val,
+							   'Amount' => -1 * abs($price),
+							   'CreatedDateTime' => date("Y-m-d H:i:s"),
+							   'Status' => 'Paid'
+					   );
+					   $this->credit_model->insert($credit_data);
+					   
+					   ## Send Email with Template ##           
+					   $data = $this->autoresponder_model->get_where(array('Status' => 'Enabled', 'ID' => 10)); // New order notification
+					   if( count($data) > 0 )
+					   {
+							   $from_name = $data[0]['FromName'];
+							   $from_email = $data[0]['FromEmail'];
+							   $to_email = $data[0]['ToEmail'];
+							   $subject = $data[0]['Subject'];
+							   $message = html_entity_decode($data[0]['Message']);
+
+							   //Information
+							   $post['IMEI'] = $insert['IMEI'];
+							   // Use member data if not present in $insert
+							   $member = $this->member_model->get_where(array('ID' => $member_id));
+							   $post['FirstName'] = isset($insert['FirstName']) ? $insert['FirstName'] : (isset($member[0]['FirstName']) ? $member[0]['FirstName'] : '');
+							   $post['LastName'] = isset($insert['LastName']) ? $insert['LastName'] : (isset($member[0]['LastName']) ? $member[0]['LastName'] : '');
+							   $post['Email'] = isset($insert['Email']) ? $insert['Email'] : (isset($member[0]['Email']) ? $member[0]['Email'] : '');
+
+							   $this->fsd->email_template($post, $from_email, $from_name, $to_email, $subject, $message );
+							   $this->fsd->sent_email($from_email, $from_name,$to_email, $subject, $message );
+					   }
+
+			   }                                               
+			   $this->session->set_flashdata('success_order', $this->lang->line('error_record_addes_successfully'));
+
+			   redirect("member/imeirequest/");
+		}
+	}
+	
+	public function history()
+	{
+		$data = array();
+		$data['Title'] = "IMEI Service History";
+		$data['template'] = "member/imei/requesthistory";
+
+		$data['content'] = "member/imei/requesthistory";
+		$data['content_js'] = "imei_request/imeiRequest.js";
+
+		$settings = $this->setting_model->get_all();
+		foreach ($settings as $s)
+			$data['notif'][$s['Key']] = $s['Value'];
+
+		foreach ($settings as $s)
+			$data['notif_updated'][$s['Key']] = $s['UpdatedDateTime'];
+
+		$this->load->view('mastertemplate', $data);
+	}
+	
+	public function listener($status)
+	{
+		$id = $this->session->userdata('MemberID');
+		echo $this->imeiorder_model->get_imei_data_select($id, $status);
+	}
+
+	public function listener_new()
+	{
+		$id = $this->session->userdata('MemberID');
+		$param = $this->input->post('param');
+
+		$start      =  $_REQUEST['start'];
+		$length     = $_REQUEST['length'];
+		$cari_data  = $_REQUEST['search']['value'];
+
+		$datas = $this->imeiorder_model->get_imei_data_select_new($id, $param, $start, $length, $cari_data);
+		// Hitung total data tanpa filter
+		$total_records = $this->imeiorder_model->count_all_imei($id);
+
+		// Hitung total data setelah filter
+		$total_filtered = $this->imeiorder_model->count_filtered_imei($id, $cari_data, $statusFilter, $startDate, $endDate);
+
+		$total = 9999999;
+		$array_data = array();
+		$no = $start + 1;
+		if (!empty($datas) && $datas != null) {
+
+			foreach ($datas as $d) {
+
+				$data["no"]          = $no;
+				$data["imei"]        = $d['IMEI'];
+				$data["service"] 	 = $d['Title'];
+				$data["code"]     	 = $d['Code'];
+				$data["note"]        = $d['Note'];
+				$data["status"]      = $d['Status'];
+				$data["created_at"]  = $d['CreatedDateTime'];
+
+				array_push($array_data, $data);
+				$no++;
+			}
+		}
+
+
+		$output = array(
+			"draw" => intval($_REQUEST['draw']),
+			"recordsTotal" => intval($total_records),
+			"recordsFiltered" => intval($total_filtered),
+			"data" => $array_data
+		);
+
+
+		echo json_encode($output);
+	}
+	
+	/* IMEI Validation */
+	public function duplicate_check($imeis, $method_id)
+	{
+		$imeis = explode(PHP_EOL, $imeis);	
+		$imeis = array_unique($imeis);
+
+		$orders = $this->imeiorder_model->get_duplicates( $imeis, $this->session->userdata('MemberID'), $method_id);
+		if(!empty($orders))
+		{
+			$imeis = array_column($orders, 'IMEI');
+			$imeis = array_unique($imeis);
+			$imeis = implode(', ', $imeis);
+			$this->form_validation->set_message('duplicate_check', 'The Serial No / IMEI('.$imeis.') already requested.');
+			return FALSE;			
+		}
+		return TRUE;
+	}
+
+	public function sn_check($str)
+	{
+		$sns = explode(PHP_EOL, $str);		
+		$sns = array_unique($sns);
+		foreach($sns as $sn)
+		{	
+			if (strlen($sn) != 10 && strlen($sn) != 12)
+			{
+				$this->form_validation->set_message('sn_check', 'One or more Serial No(s) are invalid.');
+				return FALSE;
+			}			
+		}
+		return TRUE;
+	}
+
+	public function imei_check($str)
+	{
+		$imeis = explode(PHP_EOL, $str);		
+		$imeis = array_unique($imeis);
+		
+		foreach($imeis as $imei)
+		{	
+			if( TRUE !== $this->is_imei($imei) ) 
+			{
+				$this->form_validation->set_message('imei_check', 'One or more IMEI(s) are invalid.');
+				return FALSE;
+			}			
+		}
+		return TRUE;		
+	}
+	
+	private function is_imei($imei)
+	{
+		// Should be 15 digits
+		if(strlen($imei) != 15 || !ctype_digit($imei))
+			return false;
+		// Get digits
+		$digits = str_split($imei);
+		// Remove last digit, and store it
+		$imei_last = array_pop($digits);
+		// Create log
+		$log = array();
+		// Loop through digits
+		foreach($digits as $key => $n)
+		{
+			// If key is odd, then count is even
+			if($key & 1)
+			{
+				// Get double digits
+				$double = str_split($n * 2);
+				// Sum double digits
+				$n = array_sum($double);
+			}
+			// Append log
+			$log[] = $n;
+		}
+		// Sum log & multiply by 9
+		$sum = array_sum($log) * 9;
+		// Compare the last digit with $imei_last
+		return substr($sum, -1) == $imei_last;
+	}
+
+	public function detail()
+	{
+		$id_gsm_method = $this->uri->segment(5);
+		$data = array();
+		$data['Title'] = "Imei Request Detail";
+		$data['data'] = $this->method_model->get_where(array('ID'=> $id_gsm_method));            
+		$data['download'] = !empty($data['data'][0]['Download']) ? $data['data'][0]['Download'] : '';
+		$data['video'] = !empty($data['data'][0]['Video']) ? $data['data'][0]['Video'] : '';
+		$data['template'] = "member/imei/request";
+		$settings = $this->setting_model->get_all();
+		foreach ($settings as $s)
+			$data['notif'][$s['Key']] = $s['Value'];
+
+		foreach ($settings as $s)
+			$data['notif_updated'][$s['Key']] = $s['UpdatedDateTime'];
+
+		$data['content'] = "member/imei/requestdetail";
+		$data['content_js'] = "imei_request/imeiRequest.js";
+
+
+		$this->load->view('mastertemplate', $data);
+	}
+}

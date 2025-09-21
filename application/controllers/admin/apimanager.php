@@ -1,0 +1,352 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+include APPPATH . 'third_party/DhruFusion.php';
+
+class Apimanager extends FSD_Controller 
+{
+	var $before_filter = array('name' => 'authorization', 'except' => array());
+	var $access = array('view' => '', 'add' => '', 'edit' => '', 'delete' => '');
+	var $module_name = 'API Manager';
+	
+	public function __construct()
+	{
+		parent::__construct();
+		$this->load->model('apimanager_model');
+		$this->load->model('method_model');
+		$this->load->model('network_model');
+		$this->load->model('serverbox_model');
+		$this->load->model('serverservice_model');
+		$this->load->model('fileservices_model');
+	}
+	
+	public function index()
+	{
+		$data['template'] = "admin/apimanager/list";
+		$this->load->view('admin/master_template',$data);
+	}
+	
+	public function listener()
+	{
+		// Get JSON from model, decode, modify, then re-encode
+		$json = $this->apimanager_model->get_datatable($this->access);
+		$raw = json_decode($json, true);
+		if (isset($raw['data']) && is_array($raw['data'])) {
+			foreach ($raw['data'] as &$row) {
+			// Tombol Service IMEI
+			$row['delete'] =
+				'<a href="'.site_url('admin/apimanager/service_list/'.$row['ID'].'?type=imei').'" class="btn btn-info btn-sm"><i class="fa fa-list"></i> IMEI Services</a>';
+			// Tombol Service Server
+			$row['delete'] .=
+				' <a href="'.site_url('admin/apimanager/service_list/'.$row['ID'].'?type=server').'" class="btn btn-success btn-sm"><i class="fa fa-server"></i> Server Services</a>';
+			// Tombol Edit
+			$row['delete'] .=
+				' <a href="'.site_url('admin/apimanager/edit/'.$row['ID']).'" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>';
+			// Tombol Delete
+			$row['delete'] .=
+				' <a href="'.site_url('admin/apimanager/delete/'.$row['ID']).'" class="btn btn-danger btn-sm" onclick="return confirm(\'Delete this API?\')"><i class="fa fa-trash"></i></a>';
+			}
+		}
+		echo json_encode($raw);
+	}
+
+	public function add()
+	{
+		$data['template'] = "admin/apimanager/add";
+		$data['library'] = $this->apimanager_model->get_api();
+		$this->load->view('admin/master_template',$data);
+	}
+	
+	public function edit($id)
+	{		
+		$data['data'] = $this->apimanager_model->get_where(array('ID'=> $id));
+		$data['template'] = "admin/apimanager/edit";
+		$data['library'] = $this->apimanager_model->get_api();
+		$this->load->view('admin/master_template',$data);
+	}
+		
+	public function delete($id)
+	{
+		$result = $this->method_model->count_where(array('ApiID' => $id));
+		if($result > 0)
+		{
+			$this->session->set_flashdata('warning', $result . ' method(s) are associated with this API.');
+			redirect("admin/apimanager/");			
+		}
+		
+		$result = $this->fileservices_model->count_where(array('ApiID' => $id));
+		if($result > 0)
+		{
+			$this->session->set_flashdata('warning', $result . ' File service(s) are associated with this API.');
+			redirect("admin/apimanager/");			
+		}        
+		$this->apimanager_model->delete($id);
+		$this->session->set_flashdata('success', 'Record delete successfully.');
+		redirect("admin/apimanager/");
+	}
+	
+	public function insert()
+	{
+		$this->load->library('form_validation');			
+		
+		$this->form_validation->set_rules('Title' , 'Title' ,'required|max_length[255]');		
+		$this->form_validation->set_rules('Host' , 'Host' ,'required|max_length[255]');
+		$this->form_validation->set_rules('Username' , 'Username' ,'required|max_length[255]');
+		$this->form_validation->set_rules('ApiKey' , 'ApiKey' ,'required|max_length[255]');
+		if($this->form_validation->run() === FALSE)
+		{
+			$this->add();
+		}
+		else
+		{
+			$data = $this->input->post(NULL,TRUE);
+			$data['Status'] = isset($data['Status'])?"Enabled":"Disabled";             			 
+			$data['UpdatedDateTime'] = date("Y-m-d H:i:s");
+			$data['CreatedDateTime'] = date("Y-m-d H:i:s");
+			
+			$this->apimanager_model->insert($data);
+			$this->session->set_flashdata('success', 'Record added successfully.');
+			redirect("admin/apimanager/");
+		}
+	}		
+
+	public function update()
+	{
+		$data = $this->input->post(NULL,TRUE);
+		$id = $data['ID'];
+		$this->load->library('form_validation');		
+				
+		$this->form_validation->set_rules('Title' , 'Title' ,'required|max_length[255]');		
+		$this->form_validation->set_rules('Host' , 'Host' ,'required|max_length[255]');
+		$this->form_validation->set_rules('Username' , 'Username' ,'required|max_length[255]');
+		$this->form_validation->set_rules('ApiKey' , 'ApiKey' ,'required|max_length[255]');	
+
+		if($this->form_validation->run() === FALSE)
+		{
+			$this->edit($id);
+		}
+		else
+		{
+			unset($data['ID']);
+			$data['UpdatedDateTime'] = date("Y-m-d H:i:s");
+			$data['Status'] = isset($data['Status'])?"Enabled":"Disabled"; 
+						
+			$this->apimanager_model->update($data, $id);
+			$this->session->set_flashdata('success', 'Record updated successfully.');
+			redirect("admin/apimanager/");
+		}
+	}
+	
+	public function service_list($id)
+	{		
+		## List All API services ##
+		$api_account = $this->apimanager_model->get_where(array('ID'=> $id));
+		if(isset($api_account[0]) && count($api_account[0])>0)
+		{
+			$type = strtolower($this->input->get('type'));
+			if ($type == 'server') {
+				// Server Service
+				switch (intval($api_account[0]['LibraryID'])) {
+					case LIBRARY_DHURU_CLIENT:
+						$api = new DhruFusion($api_account[0]['Host'], $api_account[0]['Username'], $api_account[0]['ApiKey']);
+						$api->debug = FALSE;
+						$request = $api->action('serverservicelist');
+						if ($this->input->get('debug') == '1') {
+							echo '<pre style="background:#fff; color:#333; border:1px solid #ccc; padding:10px;">';
+							echo "<b>API Request:</b> ";
+							var_export([
+								'Host' => $api_account[0]['Host'],
+								'Username' => $api_account[0]['Username'],
+								'ApiKey' => $api_account[0]['ApiKey'],
+								'Action' => 'serverservicelist'
+							]);
+							echo "\n\n<b>API Response:</b> ";
+							var_export($request);
+							echo '</pre>';
+							exit;
+						}
+						if(isset($request['SUCCESS'][0]['LIST']) && count($request['SUCCESS'][0]['LIST']) >0 ) {
+							$data['networks'] = $this->serverbox_model->get_all();
+							$data['service_list'] = $request['SUCCESS'][0]['LIST'];
+							$data['template'] = "admin/apimanager/server_service_list";
+						} elseif (isset($request['ERROR'][0]['MESSAGE'])) {
+							$this->session->set_flashdata('error', $request['ERROR'][0]['MESSAGE']);
+							redirect('admin/apimanager');
+						} else {
+							$this->session->set_flashdata('error', 'Services list not available at this time');
+							redirect('admin/apimanager');
+						}
+					break;
+				}
+			} else {
+				// Default: IMEI Service
+				switch (intval($api_account[0]['LibraryID'])) {
+					case LIBRARY_DHURU_CLIENT:
+						$api = new DhruFusion($api_account[0]['Host'], $api_account[0]['Username'], $api_account[0]['ApiKey']);
+						$api->debug = FALSE;
+						$request = $api->action('imeiservicelist');
+						if ($this->input->get('debug') == '1') {
+							echo '<pre style="background:#fff; color:#333; border:1px solid #ccc; padding:10px;">';
+							echo "<b>API Request:</b> ";
+							var_export([
+								'Host' => $api_account[0]['Host'],
+								'Username' => $api_account[0]['Username'],
+								'ApiKey' => $api_account[0]['ApiKey'],
+								'Action' => 'imeiservicelist'
+							]);
+							echo "\n\n<b>API Response:</b> ";
+							var_export($request);
+							echo '</pre>';
+							exit;
+						}
+						if(isset($request['SUCCESS'][0]['LIST']) && count($request['SUCCESS'][0]['LIST']) >0 ) {
+							$data['networks'] = $this->network_model->get_all();
+							$data['service_list'] = $request['SUCCESS'][0]['LIST'];
+							$data['template'] = "admin/apimanager/imei_service_list";
+						} elseif (isset($request['ERROR'][0]['MESSAGE'])) {
+							$this->session->set_flashdata('error', $request['ERROR'][0]['MESSAGE']);
+							redirect('admin/apimanager');
+						} else {
+							$this->session->set_flashdata('error', 'Services list not available at this time');
+							redirect('admin/apimanager');
+						}
+					break;
+				}
+			}
+			$this->load->view('admin/master_template', $data);
+		} else {
+			$this->session->set_flashdata('error', 'Invalid record.');
+			redirect('admin/apimanager');
+		}
+	}
+	
+	public function add_imei_service_list($id)
+	{
+		## Insert Selected services ##
+		if($this->input->server('REQUEST_METHOD') === 'POST')
+		{
+			$post = $this->input->post(NULL, TRUE);	
+			if(isset($post['chk']) && count($post['chk'])>0)
+			{
+				$data = array();
+				foreach ($post['chk'] as $service_id) 
+				{
+					$tool_id = $service_id;
+					$data[$service_id]['NetworkID'] = isset($post['NetworkID'][$service_id]) ? $post['NetworkID'][$service_id] : null;
+					$data[$service_id]['ApiID'] = $id;
+					$data[$service_id]['ToolID'] = $tool_id;
+					$data[$service_id]['Title'] = $post['ServiceName'][$service_id];
+					$data[$service_id]['DeliveryTime'] = $post['Time'][$service_id];
+					$data[$service_id]['Price'] = $post['Price'][$service_id];					
+										
+					$data[$service_id]['Network'] = $post['Network'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['Mobile'] = $post['Mobile'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['Provider'] = $post['Provider'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['PIN'] = $post['PIN'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['KBH'] = $post['KBH'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['MEP'] = $post['MEP'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['PRD'] = $post['PRD'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['Type'] = $post['Type'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['Locks'] = !isset($post['Locks'][$service_id]) || $post['Locks'][$service_id] == "None" ? '0':'1';
+					$data[$service_id]['Reference'] = $post['Reference'][$service_id] == "None" ? '0':'1';
+
+					## Exclusive Unlock Fields ##
+					$data[$service_id]['ExtraInformation'] = $post['ExtraInformation'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudCarrierInfo'] = $post['iCloudCarrierInfo'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudAppleIDHint'] = $post['iCloudAppleIDHint'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudActivationLockScreenshot'] = $post['iCloudActivationLockScreenshot'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudIMEINumberScreenshot'] = $post['iCloudIMEINumberScreenshot'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudAppleIdEmail'] = $post['iCloudAppleIdEmail'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudAppleIdScreenshot'] = $post['iCloudAppleIdScreenshot'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudAppleIdInfo'] = $post['iCloudAppleIdInfo'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudPhoneNumber'] = $post['iCloudPhoneNumber'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudID'] = $post['iCloudID'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudPassword'] = $post['iCloudPassword'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudUDID'] = $post['iCloudUDID'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudICCID'] = $post['iCloudICCID'][$service_id] == "None"? '0':'1';
+					$data[$service_id]['iCloudVideo'] = $post['iCloudVideo'][$service_id] == "None"? '0':'1';
+					
+					$data[$service_id]['Status'] = 'Enabled';
+					$data[$service_id]['CreatedDateTime'] = date("y-m-d H:i:s");
+					$data[$service_id]['UpdatedDateTime'] = date("y-m-d H:i:s");									
+					
+				}
+
+				$this->method_model->insert_batch($data);
+				$this->session->set_flashdata('success', 'Selected services has been added successfully.');
+				redirect(site_url('admin/apimanager/'));				
+			}
+		}
+		$this->session->set_flashdata('error', 'No service selected.');
+		redirect('admin/apimanager');        
+	} 
+	
+	public function add_server_service_list($id)
+	{
+		## Insert Selected services ##
+		if($this->input->server('REQUEST_METHOD') === 'POST')
+		{
+			$post = $this->input->post(NULL, TRUE);	
+			if(isset($post['chk']) && count($post['chk'])>0)
+			{
+				$data = array();
+				foreach ($post['chk'] as $service_id) 
+				{
+					$tool_id = $service_id;
+					$data[$service_id]['ApiID'] = $id;
+					$data[$service_id]['ServerBoxID'] = $post['ServerBoxID'][$service_id];
+					$data[$service_id]['ToolID'] = $post['ToolID'][$service_id];
+					$data[$service_id]['Title'] = $post['ServiceName'][$service_id];
+					$data[$service_id]['DeliveryTime'] = $post['Time'][$service_id];
+					$data[$service_id]['Price'] = $post['Price'][$service_id];
+					$data[$service_id]['RequiredFields'] = $post['RequiredFields'][$service_id];
+					
+					$data[$service_id]['Status'] = 'Enabled';
+					$data[$service_id]['CreatedDateTime'] = date("y-m-d H:i:s");
+					$data[$service_id]['UpdatedDateTime'] = date("y-m-d H:i:s");
+				}
+				$this->serverservice_model->insert_batch($data);
+				$this->session->set_flashdata('success', 'Selected services has been added successfully.');
+				redirect(site_url('admin/apimanager/'));				
+			}
+		}
+		$this->session->set_flashdata('error', 'No service selected.');
+		redirect('admin/apimanager');        
+	}
+	
+	public function add_file_service_list($id)
+	{
+		## Insert Selected services ##
+		if($this->input->server('REQUEST_METHOD') === 'POST')
+		{
+			$post = $this->input->post(NULL, TRUE);	
+			if(isset($post['chk']) && count($post['chk'])>0)
+			{
+				$data = array();
+				foreach ($post['chk'] as $service_id) 
+				{
+					$tool_id = $service_id;
+					$data[$service_id]['ApiID'] = $id;
+					$data[$service_id]['ToolID'] = $tool_id;
+					$data[$service_id]['Title'] = $post['ServiceName'][$service_id];
+					$data[$service_id]['DeliveryTime'] = $post['Time'][$service_id];
+					$data[$service_id]['Price'] = $post['Price'][$service_id];
+					$data[$service_id]['AllowExtension'] = $post['AllowExtension'][$service_id];
+                    
+					$data[$service_id]['Status'] = 'Enabled';
+					$data[$service_id]['CreatedDateTime'] = date("y-m-d H:i:s");
+					$data[$service_id]['UpdatedDateTime'] = date("y-m-d H:i:s");
+				}
+				$this->fileservices_model->insert_batch($data);
+				$this->session->set_flashdata('success', 'Selected services has been added successfully.');
+				redirect(site_url('admin/apimanager/'));				
+			}	
+		}
+		// Ambil log aktivitas
+		$this->load->model('Log_model');
+		$data['logs'] = $this->Log_model->get_logs(100);
+		$data['template'] = 'admin/apimanager/file_service_list';
+		$this->load->view('admin/master_template', $data);
+	} 
+}
+
+/* End of file apimanager.php */
+/* Location: ./application/controllers/admin/apimanager.php */

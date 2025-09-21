@@ -1,0 +1,66 @@
+[16-Sep-2025 12:32:15 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:32:18 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:32:38 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:39:53 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:40:03 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:44:30 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:45:40 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:47:27 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:50:53 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:51:39 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224
+[16-Sep-2025 12:58:59 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Call to undefined function log_activity() in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php:224
+Stack trace:
+#0 /home/u4817709/new.indobypass.com/system/core/CodeIgniter.php(359): checkout->getTokenTripay()
+#1 /home/u4817709/new.indobypass.com/index.php(315): require_once('/home/u4817709/...')
+#2 {main}
+  thrown in /home/u4817709/new.indobypass.com/application/controllers/member/checkout.php on line 224

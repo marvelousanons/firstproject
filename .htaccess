@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Kalau file atau folder memang ada → jangan di-redirect
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Arahkan semua request ke index.php
+    RewriteRule ^(.*)$ index.php/$1 [L]
+</IfModule>
+
+
+
+
+##AddHandler application/x-httpd-php56 .php
+# RewriteEngine on
+# RewriteCond $1 !^(index\.php|img|assets|css|fonts|js|uploads|robots\.txt|.well-known)
+# RewriteRule ^(.*)$ index.php/$1 [L]
