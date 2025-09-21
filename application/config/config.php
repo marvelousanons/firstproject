@@ -1,5 +1,4 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-date_default_timezone_set('Asia/Jakarta'); 
 
 /*
 |--------------------------------------------------------------------------
@@ -15,7 +14,9 @@ date_default_timezone_set('Asia/Jakarta');
 | path to your installation.
 |
 */
-$config['base_url']						= 	'https://marvelousz.xyz/';
+// $config['base_url']						= 	'https://localhost/indobypass/';
+$config['base_url'] = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http")
+    . "://".$_SERVER['HTTP_HOST']."/marvelous/";
 $config['assets_url']					= 	$config['base_url'].'assets/';
 $config['page_url']						= 	$config['base_url'].'uploads/cms/pages/';
 $config['page_thumb_url']				= 	$config['base_url'].'uploads/cms/pages/thumbs/';
@@ -379,7 +380,7 @@ $config['compress_output'] = FALSE;
 | regarding date handling.
 |
 */
-$config['time_reference'] = 'local';
+$config['time_reference'] = 'gmt';
 
 
 /*
