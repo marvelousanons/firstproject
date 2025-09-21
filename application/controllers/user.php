@@ -56,11 +56,8 @@ class User extends FSD_Controller
 				redirect('forgot_password');	 		
 			}
 		}
-		$data = array();
-		$data["title"] = $this->lang->line('forgot_password_heading');
-		$data["heading"] = $this->lang->line('forgot_password_heading');
-		// $data['master_template'] = "user/forgetpassword";
-		$this->load->view("user/forgetpassword", $data);
+		// Fungsi lupa password dinonaktifkan sementara
+		show_error('ERROR.', 403);
 	}
 	
 	public function set_password($token)
@@ -385,82 +382,83 @@ class User extends FSD_Controller
 
 	public function register()
 	{
-		if($this->input->server('REQUEST_METHOD') === 'POST')
-		{        
-			$this->form_validation->set_rules('FirstName', 'First Name', 'required|min_length[3]');
-			$this->form_validation->set_rules('LastName', 'Last Name', 'required|min_length[3]');
-			$this->form_validation->set_rules('Email', 'Email', 'required|valid_email|is_unique[gsm_members.Email]');
-			$this->form_validation->set_rules('Password', 'Password', 'required|min_length[5]');
-			$this->form_validation->set_rules('CPassword', 'Confirm Password', 'required|matches[Password]');
-			## set custom validation error messages ##
-			$this->form_validation->set_message('is_unique', $this->lang->line('error_email_already_registered'));            
-			if ($this->form_validation->run() !== FALSE)
-			{
-				$data = $this->input->post(NULL, TRUE); //collect form data                
-				//register data to database
-				$token = rand(123456789, 987654321);
-				unset($data['CPassword']);
-				$data['Token'] = $token;
-				$data['ReferralMemberID'] = $this->session->userdata('referral')? $this->session->userdata('referral'): NULL;
-				$data['Status'] = 'Disabled';
-				$data["CreatedDateTime"] = date("y-m-d H:i:s");
-				$this->member_model->insert($data);
+		// if($this->input->server('REQUEST_METHOD') === 'POST')
+		// {        
+		// 	$this->form_validation->set_rules('FirstName', 'First Name', 'required|min_length[3]');
+		// 	$this->form_validation->set_rules('LastName', 'Last Name', 'required|min_length[3]');
+		// 	$this->form_validation->set_rules('Email', 'Email', 'required|valid_email|is_unique[gsm_members.Email]');
+		// 	$this->form_validation->set_rules('Password', 'Password', 'required|min_length[5]');
+		// 	$this->form_validation->set_rules('CPassword', 'Confirm Password', 'required|matches[Password]');
+		// 	## set custom validation error messages ##
+		// 	$this->form_validation->set_message('is_unique', $this->lang->line('error_email_already_registered'));            
+		// 	if ($this->form_validation->run() !== FALSE)
+		// 	{
+		// 		$data = $this->input->post(NULL, TRUE); //collect form data                
+		// 		//register data to database
+		// 		$token = rand(123456789, 987654321);
+		// 		unset($data['CPassword']);
+		// 		$data['Token'] = $token;
+		// 		$data['ReferralMemberID'] = $this->session->userdata('referral')? $this->session->userdata('referral'): NULL;
+		// 		$data['Status'] = 'Disabled';
+		// 		$data["CreatedDateTime"] = date("y-m-d H:i:s");
+		// 		$this->member_model->insert($data);
 
-				// Catat log aktivitas pendaftaran user
-				$this->load->model('catatan_aktivitas');
-				$logdata = array(
-					'user_id' => null,
-					'username' => $data['Email'],
-					'activity' => 'Registrasi akun baru',
-					'ip_address' => $this->input->ip_address(),
-					'created_at' => date('Y-m-d H:i:s')
-				);
-				$this->db->insert('activity_log', $logdata);
+		// 		// Catat log aktivitas pendaftaran user
+		// 		$this->load->model('catatan_aktivitas');
+		// 		$logdata = array(
+		// 			'user_id' => null,
+		// 			'username' => $data['Email'],
+		// 			'activity' => 'Registrasi akun baru',
+		// 			'ip_address' => $this->input->ip_address(),
+		// 			'created_at' => date('Y-m-d H:i:s')
+		// 		);
+		// 		$this->db->insert('activity_log', $logdata);
 
-				## Get Issue Email Template ##
-				$template = $this->autoresponder_model->get_where(array('Status' => 'Enabled', 'ID' => 1)); // Registration Email                    
-				## Send Email with Template ##         
-				if(isset($template) && count($template)>0)
-				{
-					$from_name = $template[0]['FromName'];
-					$from_email = $template[0]['FromEmail'];
-					$to_email = $template[0]['ToEmail'];
-					$subject = $template[0]['Subject'];
-					$message = html_entity_decode($template[0]['Message']);
-					//Information
-					$post['Password'] = $data['password'];
-					$post['FirstName'] = $data['FirstName'];
-					$post['LastName'] = $data['LastName'];
-					$post['Email'] = $data['Email'];
-					$post['Password'] = $this->input->post('Password', TRUE);
-					$post['TokenUrl'] = site_url('user/verify/'.$token);
-					$this->fsd->email_template($post, $from_email, $from_name, $to_email, $subject, $message );
-					$this->fsd->sent_email($from_email, $from_name,$to_email, $subject, $message );
-				}
+		// 		## Get Issue Email Template ##
+		// 		$template = $this->autoresponder_model->get_where(array('Status' => 'Enabled', 'ID' => 1)); // Registration Email                    
+		// 		## Send Email with Template ##         
+		// 		if(isset($template) && count($template)>0)
+		// 		{
+		// 			$from_name = $template[0]['FromName'];
+		// 			$from_email = $template[0]['FromEmail'];
+		// 			$to_email = $template[0]['ToEmail'];
+		// 			$subject = $template[0]['Subject'];
+		// 			$message = html_entity_decode($template[0]['Message']);
+		// 			//Information
+		// 			$post['Password'] = $data['password'];
+		// 			$post['FirstName'] = $data['FirstName'];
+		// 			$post['LastName'] = $data['LastName'];
+		// 			$post['Email'] = $data['Email'];
+		// 			$post['Password'] = $this->input->post('Password', TRUE);
+		// 			$post['TokenUrl'] = site_url('user/verify/'.$token);
+		// 			$this->fsd->email_template($post, $from_email, $from_name, $to_email, $subject, $message );
+		// 			$this->fsd->sent_email($from_email, $from_name,$to_email, $subject, $message );
+		// 		}
 
-				## Get Issue Email Template ##
-				$template = $this->autoresponder_model->get_where(array('Status' => 'Enabled', 'ID' => 8)); // Registration notification to admin
-				## Send Email with Template ##         
-				if(isset($template) && count($template)>0)
-				{
-					$from_name = $template[0]['FromName'];
-					$from_email = $template[0]['FromEmail'];
-					$to_email = $template[0]['ToEmail'];
-					$subject = $template[0]['Subject'];
-					$message = html_entity_decode($template[0]['Message']);
-					//Information
-					$post['Password'] = $data['password'];
-					$post['FirstName'] = $data['FirstName'];
-					$post['LastName'] = $data['LastName'];
-					$post['Email'] = $data['Email'];
-					$post['Password'] = $this->input->post('Password', TRUE);                    
-					$this->fsd->email_template($post, $from_email, $from_name, $to_email, $subject, $message );
-					$this->fsd->sent_email($from_email, $from_name,$to_email, $subject, $message );
-				}
-				$this->session->set_flashdata("message", '<div class="alert alert-success alert-dismissible fade show" role="alert" role="danger"> '.$this->lang->line('error_verification_email').'  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
-				redirect('login');                                    
-			}
-		}
+		// 		## Get Issue Email Template ##
+		// 		$template = $this->autoresponder_model->get_where(array('Status' => 'Enabled', 'ID' => 8)); // Registration notification to admin
+		// 		## Send Email with Template ##         
+		// 		if(isset($template) && count($template)>0)
+		// 		{
+		// 			$from_name = $template[0]['FromName'];
+		// 			$from_email = $template[0]['FromEmail'];
+		// 			$to_email = $template[0]['ToEmail'];
+		// 			$subject = $template[0]['Subject'];
+		// 			$message = html_entity_decode($template[0]['Message']);
+		// 			//Information
+		// 			$post['Password'] = $data['password'];
+		// 			$post['FirstName'] = $data['FirstName'];
+		// 			$post['LastName'] = $data['LastName'];
+		// 			$post['Email'] = $data['Email'];
+		// 			$post['Password'] = $this->input->post('Password', TRUE);                    
+		// 			$this->fsd->email_template($post, $from_email, $from_name, $to_email, $subject, $message );
+		// 			$this->fsd->sent_email($from_email, $from_name,$to_email, $subject, $message );
+		// 		}
+		// 		$this->session->set_flashdata("message", '<div class="alert alert-success alert-dismissible fade show" role="alert" role="danger"> '.$this->lang->line('error_verification_email').'  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
+		// 		redirect('login');                                    
+		// 	}
+		// }
+		show_error('ERROR', 403);
 		$referral = $this->input->get('referral', TRUE); 
 		if( !empty($referral) )
 		{

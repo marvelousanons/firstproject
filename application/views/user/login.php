@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Marvel:Store</title>
+    <title>Marvel:Fans</title>
     <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
     <link rel="icon" href="<?= site_url() ?>img/11892408.png" type="image/x-icon" />
 
@@ -42,7 +42,7 @@
                         </div>
                         <div class="form-group">
                             <label for="Password"><b><?php echo $this->lang->line('login_lb_password') ?></b></label>
-                            <a href="<?php echo site_url('forgot_password'); ?>" class="link float-end"><?php echo $this->lang->line('login_forgot_password') ?>?</a>
+                            <!-- <a href="<?php echo site_url('forgot_password'); ?>" class="link float-end"><?php echo $this->lang->line('login_forgot_password') ?>?</a> -->
                             <div class="position-relative">
                                 <input type="password" id="Password" name="Password" class="form-control" placeholder="<?php echo $this->lang->line('login_lb_password') ?>" required>
                                 <div class="show-password">
@@ -63,10 +63,10 @@
                         </div>
                     <?php echo form_close(); ?>
 
-                    <div class="login-account">
+                    <!-- <div class="login-account">
                         <span class="msg">Don't have an account yet?</span>
                         <a href="<?= site_url('register'); ?>" class="link">Register</a>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

@@ -136,7 +136,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
+    <!-- <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
         <div class="card">
             <div class="card-header">
                 <div class="card-title">Payment Details</div>
@@ -163,7 +163,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 </div>
 <style>
 #gcw_siteFB0OlsZi4 {

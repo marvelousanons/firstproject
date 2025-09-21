@@ -12,7 +12,7 @@ class aiagent extends FSD_Controller
     public function index()
     {
         $data = array();
-        $data['Title'] = "AI Agent";
+        // $data['Title'] = "AI Agent";
         $data['template'] = "member/aiagent";
         $data['content'] = "member/aiagent";
         $data['content_js'] = "dashboard/dashboard.js";

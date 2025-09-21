@@ -40,7 +40,7 @@
 				</div>
 				</div>
 			</div>
-			<div class="col-sm-6 col-md-3">
+			<!-- <div class="col-sm-6 col-md-3">
 				<div class="card card-stats card-info card-round">
 				<div class="card-body">
 					<div class="row">
@@ -58,7 +58,7 @@
 					</div>
 				</div>
 				</div>
-			</div>
+			</div> -->
 			<div class="col-sm-6 col-md-3">
 				<div class="card card-stats card-success card-round">
 				<div class="card-body">
@@ -70,7 +70,7 @@
 					</div>
 					<div class="col-9 col-stats">
 						<div class="numbers">
-						<p class="card-category">Total IMEI Order</p>
+						<p class="card-category">Total Order</p>
 						<h4 class="card-title"><?= $total_order ?></h4>
 						</div>
 					</div>
@@ -78,7 +78,7 @@
 				</div>
 				</div>
 			</div>
-			<div class="col-sm-6 col-md-3">
+			<!-- <div class="col-sm-6 col-md-3">
 				<div class="card card-stats card-secondary card-round">
 				<div class="card-body">
 					<div class="row">
@@ -96,7 +96,7 @@
 					</div>
 				</div>
 				</div>
-			</div>
+			</div> -->
 		</div>
 		<!-- Pie Chart -->
 		<div class="row">
@@ -246,7 +246,7 @@
 					</div>
 					
 				</div>
-				<div class="card card-round">
+				<!-- <div class="card card-round">
 					<div class="card-body">
 						<div class="card-title fw-mediumbold">INDOBYPASS TEAM</div>
 						<div class="card-list">
@@ -290,9 +290,9 @@
 							</div>
 						</div>
 					</div>
-				</div>
+				</div> -->
 			</div>
-			<div class="col-md-5">
+			<!-- <div class="col-md-5">
 				<div class="card card-post card-round">
 				<img class="card-img-top" src="<?= base_url() ?>assets/img/profile/activity/<?= $activity['ImageName'] ? $activity['ImageName'] : 'opensubmit.png' ?>"  alt="Card image cap" />
 				<div class="card-body">
@@ -324,9 +324,9 @@
 					<p class="card-text">
 					<?= $activity['Text'] ?>
 					</p>
-					<!-- <a href="#" class="btn btn-primary btn-rounded btn-sm">Read More</a> -->
+					<a href="#" class="btn btn-primary btn-rounded btn-sm">Read More</a>
 				</div>
-				</div>
+				</div> -->
 			</div>
 		</div>
 		

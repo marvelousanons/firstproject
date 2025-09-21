@@ -2,7 +2,7 @@
 
 <div class="page-header">
 	<div class="d-flex justify-content-between">
-		<h3 class="fw-bold">AI Agent INDOBYPASS</h3>
+		<!-- <h3 class="fw-bold">AI Agent INDOBYPASS</h3> -->
 		<ul class="breadcrumbs">
 			<li class="nav-home">
 				<a href="<?= site_url() ?>member/dashboard">
@@ -13,7 +13,7 @@
 				<i class="icon-arrow-right"></i>
 			</li>
 			<li class="nav-item">
-				<a href="#">AI Agent</a>
+				<!-- <a href="#">AI Agent</a> -->
 			</li>
 		</ul>
 	</div>

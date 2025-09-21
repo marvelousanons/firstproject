@@ -29,9 +29,9 @@
 
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>INDOBYPASS | <?= $Title ?></title>
+    <title>Marvel:Fans |</title>
     <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
-    <link rel="shortcut icon" href="<?= base_url() ?>img/indobypass_icon_new.png">
+    <link rel="shortcut icon" href="<?= base_url() ?>img/11892408.png" type="image/x-icon" />
     <script type="text/javascript" src="https://app.midtrans.com/snap/snap.js"
       data-client-key="<?= $this->config->item('midtransClientKey') ?>"></script>
     <!-- Fonts and icons -->
@@ -72,7 +72,7 @@
                 <!-- Logo Header -->
                 <div class="logo-header" data-background-color="dark">
                     <a href="#" class="logo">
-                        <img src="<?= site_url() ?>img/indobypass_logo_new.png" alt="navbar brand" class="navbar-brand"
+                        <img src="<?= site_url() ?>img/marvel.webp" alt="navbar brand" class="navbar-brand"
                             height="80" />
                     </a>
                     <div class="nav-toggle">
@@ -195,7 +195,7 @@
                     </span>
                     <h4 class="text-section">Special Features</h4>
                 </li>
-                <li <?= $this->uri->uri_string(2) == 'member/aiagent' ? 'class="nav-item active"' : 'class="nav-item"'; ?> >
+                <!-- <li <?= $this->uri->uri_string(2) == 'member/aiagent' ? 'class="nav-item active"' : 'class="nav-item"'; ?> >
                     <a href="<?= site_url() ?>member/aiagent">
                         <span style="display:inline-block;width:24px;height:24px;vertical-align:middle;"
                         class="aiagent-icon<?= $this->uri->uri_string(2) == 'member/aiagent' ? ' active' : '' ?>">
@@ -205,13 +205,13 @@
                     </span>
                     <p style="display:inline-block;vertical-align:middle;margin-left:8px;">AI Agent</p>
                 </a>
-                </li>
-                <li class="nav-section center-content">
+                </li> -->
+                <!-- <li class="nav-section center-content">
                     <span class="sidebar-mini-icon">
                     <span class="badge bg-warning">Versi v2.0</span>
                     </span>
                     <h4 class="text-section">Hak Cipta @2025 INDOBYPASS Team</h4>
-                </li>
+                </li> -->
             </ul>
         </div>
     </div>
@@ -248,7 +248,7 @@
                     <div class="container-fluid">
                         <nav
                             class="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex">
-                            <img src="<?= base_url() ?>img/Indobypass-logo2-03.png" alt="" height="80">
+                            <img src="<?= base_url() ?>img/marvel.webp" alt="" height="80">
                         </nav>
 
                         <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
@@ -267,8 +267,8 @@
                             </li>
                             <li class="nav-item topbar-user dropdown hidden-caret">
                                 <p class="opacity-100" style="color:dark-blue">
-                                    <marquee behavior="scroll" direction="left">iCloud MEID / GSM BYPASS WITH SIGNAL SERVICE ON, iCloud MEID / GSM BYPASS WITH SIGNAL SERVICE ON</marquee>
-                                    <marquee behavior="scroll" direction="left"><?= isset($key['push_headline']) ? $key['push_headline'] : '' ?></marquee>
+                                    <!-- <marquee behavior="scroll" direction="left">iCloud MEID / GSM BYPASS WITH SIGNAL SERVICE ON, iCloud MEID / GSM BYPASS WITH SIGNAL SERVICE ON</marquee> -->
+                                    <!-- <marquee behavior="scroll" direction="left"><?= isset($key['push_headline']) ? $key['push_headline'] : '' ?></marquee> -->
                                 </p>
                             </li>
                             <li class="nav-item topbar-icon dropdown hidden-caret">
@@ -385,7 +385,7 @@
             <footer class="footer">
                 <div class="container-fluid d-flex justify-content-between align-items-center">
                     <div class="copyright text-center font-weight-bold mx-auto">
-                        Copyrights © 2025 All Rights Reserved by INDOBYPASS Team
+                        Copyrights © 2025 All Rights Reserved
                     </div>
                 </div>
             </footer>
