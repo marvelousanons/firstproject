@@ -110,7 +110,10 @@ class Cron extends CI_Controller
 	 */	
 	public function receive_imei_orders()
 	{
-		$result = $this->method_model->get_pending_imei_orders();
+		set_time_limit(300); // Maksimal eksekusi 5 menit
+
+		// Batasi hanya 5 order per eksekusi
+		$result = $this->method_model->get_pending_imei_orders(5);
 
 		foreach ($result as $imei_orders) 
 		{
@@ -124,7 +127,6 @@ class Cron extends CI_Controller
 					$api->debug = FALSE; // Debug on
 					$para['ID'] = $imei_orders['ReferenceID']; // got REFERENCEID from placeimeiorder
 					$request = $api->action('getimeiorder', $para);
-					//echo '<pre>'; var_dump($request); die('</pre>');
 					if(isset($request['SUCCESS']) && count($request['SUCCESS'])>0)
 					{
 						switch(intval($request['SUCCESS'][0]['STATUS']))
@@ -135,7 +137,6 @@ class Cron extends CI_Controller
 								$data['Status'] = 'In process';
 								$data['UpdatedDateTime'] = date("Y-m-d H:i:s");									
 								$this->imeiorder_model->update($data, $id);
-								## Get Issue Email Template ##
 								$data = $this->autoresponder_model->get_where(array('Status' => 'Enabled', 'ID' => 1)); // IMEI Code Issued 
 								break;				
 							case 2:
@@ -146,10 +147,7 @@ class Cron extends CI_Controller
 								$data['Status'] = 'Canceled';
 								$data['UpdatedDateTime'] = date("Y-m-d H:i:s");									
 								$this->imeiorder_model->update($data, $id);
-								
-								## Amount Refund ##
 								$this->credit_model->refund($id, IMEI_CODE_REQUEST, $member_id);
-								## Get Canceled Email Template ##
 								$data = $this->autoresponder_model->get_where(array('Status' => 'Enabled', 'ID' => 2)); // IMEI Code Canceled 
 								break;
 							case 4:	//success
@@ -157,14 +155,12 @@ class Cron extends CI_Controller
 								$data['Status'] = 'Issued';
 								$data['UpdatedDateTime'] = date("Y-m-d H:i:s");									
 								$this->imeiorder_model->update($data, $id);
-								## Get Issue Email Template ##
 								$data = $this->autoresponder_model->get_where(array('Status' => 'Enabled', 'ID' => 3)); // IMEI Code Issued 
 								break;
 						}				
 					}
 				break;
 			}
-			## Send Email with Template ## 		
 			if( count($data) > 0 )
 			{
 				$from_name = $data[0]['FromName'];
@@ -173,7 +169,6 @@ class Cron extends CI_Controller
 				$subject = $data[0]['Subject'];
 				$message = html_entity_decode($data[0]['Message']);
 
-				//Information
 				$post['Code'] = $request['SUCCESS'][0]['CODE'];
 				$post['IMEI'] = $imei_orders['IMEI'];
 				$post['FirstName'] = $imei_orders['FirstName'];

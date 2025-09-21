@@ -27,19 +27,20 @@ class method_model extends CI_Model
 		return $query->result_array();
 	}
 	
-	public function get_pending_imei_orders() 
+	public function get_pending_imei_orders($limit = 5) 
 	{
 		$this->db->select("$this->tbl_apis.LibraryID, $this->tbl_apis.Host, $this->tbl_apis.Username, $this->tbl_apis.ApiKey")
-		->select("$this->tbl_name.ToolID, $this->tbl_imei_orders.Email, $this->tbl_imei_orders.ID, $this->tbl_imei_orders.ReferenceID, $this->tbl_imei_orders.IMEI")
-		->select("$this->tbl_members.Email AS MemberEmail, $this->tbl_members.FirstName, $this->tbl_members.LastName, $this->tbl_imei_orders.MemberID")
-		->from($this->tbl_apis)
-		->join($this->tbl_name, "$this->tbl_apis.ID = $this->tbl_name.ApiID")
-		->join($this->tbl_imei_orders, "$this->tbl_name.ID = $this->tbl_imei_orders.MethodID")
-		->join($this->tbl_members, "$this->tbl_imei_orders.MemberID = $this->tbl_members.ID")
-		->where_in("$this->tbl_imei_orders.Status", ["Pending", "In process"])
-		->where("`$this->tbl_imei_orders`.`ReferenceID` IS NOT NULL", NULL, false)
-		->order_by("$this->tbl_imei_orders.ID", "ASC");
-		
+			->select("$this->tbl_name.ToolID, $this->tbl_imei_orders.Email, $this->tbl_imei_orders.ID, $this->tbl_imei_orders.ReferenceID, $this->tbl_imei_orders.IMEI")
+			->select("$this->tbl_members.Email AS MemberEmail, $this->tbl_members.FirstName, $this->tbl_members.LastName, $this->tbl_imei_orders.MemberID")
+			->from($this->tbl_apis)
+			->join($this->tbl_name, "$this->tbl_apis.ID = $this->tbl_name.ApiID")
+			->join($this->tbl_imei_orders, "$this->tbl_name.ID = $this->tbl_imei_orders.MethodID")
+			->join($this->tbl_members, "$this->tbl_imei_orders.MemberID = $this->tbl_members.ID")
+			->where_in("$this->tbl_imei_orders.Status", ["Pending", "In process"])
+			->where("`$this->tbl_imei_orders`.`ReferenceID` IS NOT NULL", NULL, false)
+			->order_by("$this->tbl_imei_orders.ID", "ASC")
+			->limit($limit); // tambahkan limit di sini
+
 		$query = $this->db->get();
 		return $query->result_array();
 	}
