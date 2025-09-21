@@ -67,6 +67,7 @@ class DhruFusion
                 curl_setopt($crul, CURLOPT_POST, true);
                 curl_setopt($crul, CURLOPT_SSL_VERIFYPEER, false);
                 curl_setopt($crul, CURLOPT_POSTFIELDS, $posted);
+                curl_setopt($crul, CURLOPT_TIMEOUT, 30); // timeout 30 detik
                 $response = curl_exec($crul);
                 if (curl_errno($crul) != CURLE_OK)
                 {

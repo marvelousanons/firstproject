@@ -48,7 +48,11 @@ class Cron extends CI_Controller
 	 */		
 	public function send_imei_orders()
 	{
-		$result = $this->method_model->send_pending_imei_orders();
+		set_time_limit(300); // Maksimal eksekusi 5 menit
+
+		// Batasi hanya 5 order per eksekusi
+		$result = $this->method_model->send_pending_imei_orders(5);
+
 		foreach ($result as $order) 
 		{
 			switch ($order['LibraryID']) 
@@ -57,20 +61,16 @@ class Cron extends CI_Controller
 					$api = new DhruFusion($order['Host'], $order['Username'], $order['ApiKey']);
 					$api->debug = FALSE; // Debug on
 					$para['IMEI'] = $order['IMEI'];
-					$para['ID'] = $order['ToolID']; // got from 'imeiservicelist' [SERVICEID]
-					// PARAMETRES IS require_once
+					$para['ID'] = $order['ToolID'];
 					$para['MODELID'] = $order['ModelID'];
 					$para['PROVIDERID'] = $order['ProviderID'];
 					$para['MEP'] = $order['MEPID'];
 					$para['PIN'] = $order['PIN'];
 					$para['KBH'] = $order['KBH'];
 					$para['PRD'] = $order['PRD'];
-					//$para['SECRO'] = $order['ModelID'];
 					$para['TYPE'] = $order['Type'];
 					$para['REFERENCE'] = $order['Reference'];
 					$para['LOCKS'] = $order['Locks'];
-
-					## Exclusive Unlock Fields ##
 					$para['ExtraInformation'] = $order['ExtraInformation'];
 					$para['iCloudCarrierInfo'] = $order['iCloudCarrierInfo'];
 					$para['iCloudAppleIDHint'] = $order['iCloudAppleIDHint'];

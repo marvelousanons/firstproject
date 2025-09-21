@@ -44,7 +44,7 @@ class method_model extends CI_Model
 		return $query->result_array();
 	}
 	
-	public function send_pending_imei_orders() 
+	public function send_pending_imei_orders($limit = 5) 
 	{
 		$this->db->select("$this->tbl_apis.LibraryID, $this->tbl_apis.Host, $this->tbl_apis.Username, $this->tbl_apis.ApiKey")
 		->select("$this->tbl_name.ToolID, $this->tbl_imei_orders.*")
@@ -52,8 +52,9 @@ class method_model extends CI_Model
 		->join($this->tbl_name, "$this->tbl_apis.ID = $this->tbl_name.ApiID")
 		->join($this->tbl_imei_orders, "$this->tbl_name.ID = $this->tbl_imei_orders.MethodID")
 		->where(array("$this->tbl_imei_orders.Status" => "Pending", "$this->tbl_imei_orders.ReferenceID" => NULL))
-		->order_by("$this->tbl_imei_orders.ID", "ASC");
-		
+		->order_by("$this->tbl_imei_orders.ID", "ASC")
+		->limit($limit); // tambahkan limit
+
 		$query = $this->db->get();
 		return $query->result_array();
 	}	
