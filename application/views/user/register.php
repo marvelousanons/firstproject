@@ -4,7 +4,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title><?php echo $this->settings['app_name']; ?>:: Register</title>
     <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
-    <link rel="icon" href="<?= site_url() ?>img/indobypass_icon_new.png" type="image/x-icon" />
+    <link rel="icon" href="<?= site_url() ?>img/11892408.png" type="image/x-icon" />
 
     <!-- Fonts and icons -->
     <script src="<?= site_url() ?>assets/assets_members/js/plugin/webfont/webfont.min.js"></script>
@@ -26,7 +26,7 @@
 <body class="login">
     <div class="wrapper wrapper-login wrapper-login-full p-0">
         <div class="login-aside w-50 d-flex flex-column align-items-center justify-content-center text-center bg-primary-gradient">
-            <img src="<?= site_url() ?>img/indobypass_logo_new.png" width="60%" alt="Indobypass Logo" />
+            <img src="<?= site_url() ?>img/marvel.webp" width="60%" alt=" Logo" />
             <p class="subtitle text-white op-7">SEAMLESS BYPASS SOLUTION</p>
         </div>
         <div class="login-aside w-50 d-flex align-items-center justify-content-center bg-white">

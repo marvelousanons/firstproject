@@ -2,7 +2,7 @@ $(document).ready(function () {
     $.notify({
         // icon: 'icon-bell',
         title: 'Hello!',
-        message: 'Welcome to INDOBYPASS Dashboasdard',
+        message: 'Welcome to Dashboasdard',
     }, {
         type: 'secondary',
         placement: {

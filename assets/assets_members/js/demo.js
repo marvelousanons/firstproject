@@ -192,7 +192,7 @@ Circles.create({
 $.notify({
 	// icon: 'icon-bell',
 	title: 'Hello!',
-	message: 'Welcome to INDOBYPASS Dashboard',
+	message: 'Welcome to Dashboard',
 },{
 	type: 'secondary',
 	placement: {

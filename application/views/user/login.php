@@ -26,7 +26,7 @@
 <body class="login">
     <div class="wrapper wrapper-login wrapper-login-full p-0">
         <div class="login-aside w-50 d-flex flex-column align-items-center justify-content-center text-center bg-black-gradient">
-            <img src="<?= site_url() ?>img/marvel.webp" width="60%" alt="Indobypass Logo" />
+            <img src="<?= site_url() ?>img/marvel.webp" width="60%" alt=" Logo" />
             <!--<p class="subtitle text-white op-7">SEAMLESS BYPASS SOLUTION</p>-->
         </div>
         <div class="login-aside w-50 d-flex align-items-center justify-content-center bg-white">

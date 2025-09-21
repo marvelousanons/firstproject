@@ -4,7 +4,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title><?php echo $this->settings['app_name']; ?>:: <?php echo $title; ?></title>
     <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
-    <link rel="icon" href="<?= site_url() ?>img/indobypass_icon_new.png" type="image/x-icon" />
+    <link rel="icon" href="<?= site_url() ?>img/11892408.png" type="image/x-icon" />
 
     <!-- Fonts and icons -->
     <script src="<?= site_url() ?>assets/assets_members/js/plugin/webfont/webfont.min.js"></script>

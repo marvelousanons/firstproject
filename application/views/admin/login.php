@@ -89,7 +89,7 @@
 					</div>
 				</div>
 				<div class="text-center mt-4">
-					<small>2025 &copy; INDOBYPASS.</small>
+					<small>2025 &copy;.</small>
 				</div>
 			</div>
 		</div>
