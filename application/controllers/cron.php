@@ -113,7 +113,7 @@ class Cron extends CI_Controller
 		set_time_limit(300); // Maksimal eksekusi 5 menit
 
 		// Batasi hanya 5 order per eksekusi
-		$result = $this->method_model->get_pending_imei_orders(5);
+		$result = $this->method_model->get_pending_imei_orders(1);
 
 		foreach ($result as $imei_orders) 
 		{
@@ -127,6 +127,7 @@ class Cron extends CI_Controller
 					$api->debug = FALSE; // Debug on
 					$para['ID'] = $imei_orders['ReferenceID']; // got REFERENCEID from placeimeiorder
 					$request = $api->action('getimeiorder', $para);
+					log_message('error', 'DEBUG: receive_imei_orders API response: ' . print_r($request, true));
 					if(isset($request['SUCCESS']) && count($request['SUCCESS'])>0)
 					{
 						switch(intval($request['SUCCESS'][0]['STATUS']))
@@ -177,9 +178,11 @@ class Cron extends CI_Controller
 
 				$this->fsd->email_template($post, $from_email, $from_name, $to_email, $subject, $message );
 				$this->fsd->sent_email($from_email, $from_name,$to_email, $subject, $message );
+				log_message('error', 'DEBUG: receive_imei_orders EMAIL: ' . print_r($data, true));
 			}
 			sleep(1);								
 		}
+		log_message('error', 'DEBUG: receive_imei_orders END');
 	} 
 	
 	/**
