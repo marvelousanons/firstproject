@@ -35,7 +35,8 @@
                             <select name="payment_type" id="payment_type" class="form-control" required onchange="changePaymentType()">
                                 <!-- <option value="midtrans">Indonesia Payment</option> -->
                                 <option value="">--Select payment type--</option>
-                                <option value="tripay">Bank Indonesia (Payment Gateway)</option>
+                                <option value="gateway">Payment Gateway</option>
+                                <option value="crypto">Crypto</option>
                                 <option value="paypal">PayPal</option>
                             </select>
                         </div>
