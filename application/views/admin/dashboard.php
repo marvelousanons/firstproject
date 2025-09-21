@@ -169,5 +169,3 @@
 		</div>
 	</div>
 </div>
-<script src="/assets/plugins/datatables/media/js/jquery.js"></script>
-<script src="/js/jquery.knob.js"></script>
