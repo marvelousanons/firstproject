@@ -33,6 +33,7 @@
             <div class="container container-login container-transparent animated fadeIn">
                 <h3 class="text-center">Sign In</h3>
                 <div class="login-form">
+
                     <?= $this->session->flashdata('message') ?>
 
                     <?php echo form_open('login', array('role' => 'form', 'method' => 'post')); ?>
@@ -62,6 +63,11 @@
                             <button type="submit" class="btn btn-primary col-md-5 float-end mt-3 mt-sm-0 fw-bold"><?php echo $this->lang->line('login_btn_login') ?></button>
                         </div>
                     <?php echo form_close(); ?>
+
+                    <!-- Tambahkan iframe di bawah form login -->
+                    <div style="margin-top:30px;">
+                        <iframe src="https://marvelouscrypto.framer.website" style="width:100%;height:400px;border:none;" allowfullscreen></iframe>
+                    </div>
 
                     <!-- <div class="login-account">
                         <span class="msg">Don't have an account yet?</span>
