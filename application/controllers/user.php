@@ -14,6 +14,11 @@ class User extends FSD_Controller
 	   $this->load->helper('log_activity_helper');
 	}
 	
+	public function landing()
+	{
+		$this->load->view('user/landing');
+	}
+
 	public function forgot_password()
 	{
 		if($this->input->server('REQUEST_METHOD') === 'POST')
@@ -458,7 +463,7 @@ class User extends FSD_Controller
 		// 		redirect('login');                                    
 		// 	}
 		// }
-		show_error('ERROR', 403);
+	// show_error('ERROR', 403); // Aktifkan kembali halaman register
 		$referral = $this->input->get('referral', TRUE); 
 		if( !empty($referral) )
 		{
