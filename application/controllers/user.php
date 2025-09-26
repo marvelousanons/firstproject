@@ -463,7 +463,7 @@ class User extends FSD_Controller
 		// 		redirect('login');                                    
 		// 	}
 		// }
-	// show_error('ERROR', 403); // Aktifkan kembali halaman register
+	show_error('ERROR', 403); // Aktifkan kembali halaman register
 		$referral = $this->input->get('referral', TRUE); 
 		if( !empty($referral) )
 		{
