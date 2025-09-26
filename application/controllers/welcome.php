@@ -9,7 +9,7 @@ class Welcome extends FSD_Controller
 	
 	public function index()
 	{
-		redirect('landing');
+		redirect(site_url('landing'));
 	}
 	
 	public function testmail()
