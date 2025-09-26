@@ -43,6 +43,7 @@ $route['register'] = 'user/register';
 $route['services_list'] = 'user/services_list';
 $route['logout'] = 'user/logout';
 $route['api/index.php'] = 'api';
+$route['landing'] = 'landing/index';
 $route['default_controller'] = "welcome";
 $route['404_override'] = "";
 
